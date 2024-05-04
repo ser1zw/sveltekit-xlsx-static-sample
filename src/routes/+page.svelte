@@ -18,6 +18,20 @@
         sheetNames = reader.sheetNames();
         sheet = reader.workSheet(sheetNames[0]);
     };
+
+    const onDownloadLinkClicked = (event: Event) => {
+        let rows = [];
+        for (let r = 0; r < 10; r++) {
+            rows.push(
+                Array.from({ length: 10 }, (v, i) => sheet.get(i, r)).join(","),
+            );
+        }
+        const blob = new Blob([rows.join("\n")], { type: "text/plain" });
+
+        const target = event.target as HTMLAnchorElement;
+        target.download = "sample.txt";
+        target.href = window.URL.createObjectURL(blob);
+    };
 </script>
 
 <input id="uploaded-file" type="file" on:change={onFileUpload} />
@@ -40,6 +54,11 @@
             </tr>
         {/each}
     </table>
+    <a
+        id="download-link"
+        href="#"
+        on:click={onDownloadLinkClicked}>Download</a
+    >
 {/if}
 
 <style>
