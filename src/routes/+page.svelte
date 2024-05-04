@@ -1,5 +1,6 @@
 <script lang="ts">
     import { ExcelFileReader, ExcelSheet } from "../lib/ExcelFileReader"; // FIXME
+    import { ZipBuilder } from "../lib/ZipUtils";
 
     export let sheetNames: string[] = [];
     export let sheet: ExcelSheet;
@@ -19,18 +20,25 @@
         sheet = reader.workSheet(sheetNames[0]);
     };
 
-    const onDownloadLinkClicked = (event: Event) => {
+    const onDownloadLinkClicked = async (event: Event) => {
         let rows = [];
         for (let r = 0; r < 10; r++) {
             rows.push(
                 Array.from({ length: 10 }, (v, i) => sheet.get(i, r)).join(","),
             );
         }
-        const blob = new Blob([rows.join("\n")], { type: "text/plain" });
+        const zipBuilder = new ZipBuilder();
+        const blob = await zipBuilder
+            .addFile("README.txt", "Extracted from uploaded excel sheet\n")
+            .addFile("sample.txt", rows.join("\n"))
+            .build();
 
-        const target = event.target as HTMLAnchorElement;
-        target.download = "sample.txt";
-        target.href = window.URL.createObjectURL(blob);
+        const link = document.createElement("a");
+        document.body.appendChild(link);
+        link.href = URL.createObjectURL(blob);
+        link.download = "sample.zip";
+        link.click();
+        document.body.removeChild(link);
     };
 </script>
 
@@ -54,11 +62,7 @@
             </tr>
         {/each}
     </table>
-    <a
-        id="download-link"
-        href="#"
-        on:click={onDownloadLinkClicked}>Download</a
-    >
+    <input type="button" value="Download" on:click={onDownloadLinkClicked} />
 {/if}
 
 <style>
